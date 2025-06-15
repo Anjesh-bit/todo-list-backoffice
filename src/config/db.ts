@@ -1,4 +1,4 @@
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { Collection, MongoClient, ServerApiVersion, Document } from "mongodb";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -7,7 +7,6 @@ const dbUserName = process.env.DB_USER_NAME as string;
 const dbPassword = process.env.DB_PASS as string;
 const dbName = process.env.DB_NAME as string;
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const mongoClient = new MongoClient(
   `mongodb+srv://${dbUserName}:${dbPassword}@${dbName}.cv9ka.mongodb.net/?retryWrites=true&w=majority`,
   {
@@ -22,11 +21,22 @@ const mongoClient = new MongoClient(
 const connect = async (): Promise<void> => {
   try {
     await mongoClient.connect();
-    await mongoClient.db("GoldTree").command({ ping: 1 });
+    await mongoClient.db(dbName).command({ ping: 1 });
     console.log("You are successfully connected to MongoDB!");
   } catch (e) {
     console.error(`Error Establishing Connection: ${e}`);
   }
 };
 
-export { mongoClient, connect };
+/**
+ * Generic helper to get a typed collection from the MongoClient.
+ * @param collectionName MongoDB collection name
+ */
+
+const getCollection = <T extends Document>(
+  collectionName: string
+): Collection<T> => {
+  return mongoClient.db(dbName).collection<T>(collectionName);
+};
+
+export { mongoClient, connect, getCollection };
