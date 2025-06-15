@@ -1,24 +1,32 @@
-import express from "express";
+import express, { NextFunction, Response, Request } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connect } from "./config/db";
+import { errorHandler } from "./middleware/error.middleware";
+import { log } from "./utils/logger.utils";
+import router from "./routes/todo.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "http://localhost:5000"],
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 app.use(express.json());
+app.use("/api/v1", router);
+app.use(errorHandler);
 
-// Connect to MongoDB, then start server
 connect()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      log("info", `Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error("Failed to connect to DB", err);
-    process.exit(1); // Exit if DB connection fails
+    log("error", "Failed to connect to DB", err);
+    process.exit(1);
   });
